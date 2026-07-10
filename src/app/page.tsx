@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/Navbar";
-import { Terminal, Send, CheckCircle2, AlertTriangle, TrendingUp, TrendingDown, RefreshCw, History, Download, Bot, User, Loader2, Cpu, BarChart3, Globe2 } from "lucide-react";
+import { Terminal, Send, CheckCircle2, AlertTriangle, TrendingUp, TrendingDown, RefreshCw, History, Download, Bot, User, Loader2, Cpu, BarChart3, Globe2, Calculator, Coins, Scale, Percent, ArrowUpRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useChat } from "@ai-sdk/react";
 
@@ -41,6 +41,103 @@ export default function Home() {
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const [chatInput, setChatInput] = useState("");
+
+  // Investment Calculator States
+  const [calcPrincipal, setCalcPrincipal] = useState<number>(10000);
+  const [calcMonthly, setCalcMonthly] = useState<number>(1000);
+  const [calcMode, setCalcMode] = useState<"lumpSum" | "sip">("sip");
+  const [calcYears, setCalcYears] = useState<number>(10);
+  const [calcGrowth, setCalcGrowth] = useState<number>(15);
+  const [calcRiskProfile, setCalcRiskProfile] = useState<"bear" | "base" | "bull">("base");
+  const [calcInflationAdjusted, setCalcInflationAdjusted] = useState<boolean>(false);
+  const [calcInflationRate, setCalcInflationRate] = useState<number>(6);
+  const [calcPortfolioRisk, setCalcPortfolioRisk] = useState<"conservative" | "moderate" | "aggressive">("moderate");
+
+  // Dynamically set default growth rate when a new company result is loaded or set
+  useEffect(() => {
+    if (result) {
+      if (result.projections && result.projections.length > 1) {
+        const startVal = result.projections[0];
+        const endVal = result.projections[result.projections.length - 1];
+        const rate = Math.round((Math.pow(endVal / startVal, 1 / (result.projections.length - 1)) - 1) * 100);
+        setCalcGrowth(rate > 0 ? rate : 15);
+      } else {
+        setCalcGrowth(result.verdict === "INVEST" ? 18 : 8);
+      }
+    }
+  }, [result]);
+
+  // Compute calculator projection arrays
+  const computeCalculatorResults = () => {
+    if (!result) return { historical: [], future: [], totalInvested: 0, finalValue: 0, wealthCreated: 0 };
+
+    // Calculate Historical (Last 5 Years) working backward
+    const historicalFactors = [0.55, 0.65, 0.75, 0.88, 1.0];
+    const historical = historicalFactors.map((factor, idx) => {
+      const year = -5 + idx;
+      const value = calcMode === "lumpSum"
+        ? calcPrincipal * factor
+        : (calcPrincipal + calcMonthly * 12 * idx) * factor;
+      return {
+        year,
+        value: Math.round(value),
+        invested: calcMode === "lumpSum" ? calcPrincipal : calcPrincipal + calcMonthly * 12 * idx,
+      };
+    });
+
+    // Calculate Future (Next 5 to 10 Years)
+    let rate = calcGrowth / 100;
+    if (calcRiskProfile === "bear") rate -= 0.06;
+    if (calcRiskProfile === "bull") rate += 0.05;
+
+    if (calcInflationAdjusted) {
+      rate = (1 + rate) / (1 + calcInflationRate / 100) - 1;
+    }
+
+    const future = [];
+    let currentVal = calcPrincipal;
+    let totalInvested = calcPrincipal;
+
+    for (let y = 1; y <= calcYears; y++) {
+      if (calcMode === "lumpSum") {
+        currentVal = calcPrincipal * Math.pow(1 + rate, y);
+        totalInvested = calcPrincipal;
+      } else {
+        for (let m = 0; m < 12; m++) {
+          currentVal = (currentVal + calcMonthly) * (1 + rate / 12);
+        }
+        totalInvested = calcPrincipal + calcMonthly * 12 * y;
+      }
+      future.push({
+        year: y,
+        value: Math.round(currentVal),
+        invested: totalInvested,
+      });
+    }
+
+    const finalValue = future.length > 0 ? future[future.length - 1].value : calcPrincipal;
+    const finalInvested = future.length > 0 ? future[future.length - 1].invested : calcPrincipal;
+    const wealthCreated = Math.max(0, finalValue - finalInvested);
+
+    return { historical, future, totalInvested: finalInvested, finalValue, wealthCreated };
+  };
+
+  const calcResults = computeCalculatorResults();
+
+  // Get recommended portfolio allocation based on verdict and user risk selection
+  const getRecommendedAllocation = () => {
+    if (!result) return 0;
+    if (result.verdict === "PASS") {
+      return calcPortfolioRisk === "aggressive" ? 2 : 0;
+    }
+    // INVEST verdict allocation
+    switch (calcPortfolioRisk) {
+      case "conservative": return 3;
+      case "moderate": return 7;
+      case "aggressive": return 15;
+      default: return 5;
+    }
+  };
 
   // Initialize Vercel AI SDK chat hook with custom payload context
   const { 
@@ -670,6 +767,241 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                         <Send size={12} /> Send
                       </button>
                     </form>
+                  </div>
+                </div>
+
+                {/* Interactive Investment & Projection Calculator */}
+                <div className="retro-border p-6 bg-[#0f0f11] border-zinc-700">
+                  <h3 className="font-heading text-xl font-bold mb-4 uppercase border-b border-zinc-800 pb-2 flex items-center gap-2">
+                    <Calculator size={20} className="text-retro-accent" /> Portfolio & Projections Calculator
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Calculator Controls */}
+                    <div className="lg:col-span-5 space-y-5 font-mono text-xs">
+                      <div>
+                        <span className="text-zinc-500 uppercase block mb-2 font-bold">Investment Strategy</span>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setCalcMode("sip")}
+                            className={`flex-1 py-2 retro-border text-center font-bold transition-all uppercase text-[11px] ${
+                              calcMode === "sip" ? "bg-retro-accent text-black border-black" : "bg-[#050507] text-zinc-400 border-zinc-700 hover:text-white"
+                            }`}
+                          >
+                            SIP (Monthly)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCalcMode("lumpSum")}
+                            className={`flex-1 py-2 retro-border text-center font-bold transition-all uppercase text-[11px] ${
+                              calcMode === "lumpSum" ? "bg-retro-accent text-black border-black" : "bg-[#050507] text-zinc-400 border-zinc-700 hover:text-white"
+                            }`}
+                          >
+                            Lump Sum
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-zinc-500 uppercase block mb-1 font-bold">Initial Principal</label>
+                          <div className="relative">
+                            <span className="absolute left-2.5 top-2 text-zinc-500">₹</span>
+                            <input
+                              type="number"
+                              value={calcPrincipal}
+                              onChange={(e) => setCalcPrincipal(Math.max(0, parseInt(e.target.value) || 0))}
+                              className="w-full bg-[#050507] border border-zinc-700 pl-6 pr-2 py-1.5 text-foreground focus:outline-none focus:border-retro-accent"
+                            />
+                          </div>
+                        </div>
+
+                        {calcMode === "sip" && (
+                          <div>
+                            <label className="text-zinc-500 uppercase block mb-1 font-bold">Monthly SIP</label>
+                            <div className="relative">
+                              <span className="absolute left-2.5 top-2 text-zinc-500">₹</span>
+                              <input
+                                type="number"
+                                value={calcMonthly}
+                                onChange={(e) => setCalcMonthly(Math.max(0, parseInt(e.target.value) || 0))}
+                                className="w-full bg-[#050507] border border-zinc-700 pl-6 pr-2 py-1.5 text-foreground focus:outline-none focus:border-retro-accent"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-zinc-500 uppercase font-bold">Target Horizon ({calcYears} Years)</label>
+                          <span className="text-retro-accent font-bold">5 - 10 Years Range</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="5"
+                          max="10"
+                          value={calcYears}
+                          onChange={(e) => setCalcYears(parseInt(e.target.value))}
+                          className="w-full accent-retro-accent cursor-pointer"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-zinc-500 uppercase font-bold">Expected CAGR ({calcGrowth}%)</label>
+                          <span className="text-zinc-500 text-[10px] uppercase">Auto-calculated from report</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="1"
+                          max="40"
+                          value={calcGrowth}
+                          onChange={(e) => setCalcGrowth(parseInt(e.target.value))}
+                          className="w-full accent-retro-accent cursor-pointer"
+                        />
+                      </div>
+
+                      <div>
+                        <span className="text-zinc-500 uppercase block mb-2 font-bold">Market Stress-Test</span>
+                        <div className="flex gap-2">
+                          {[
+                            { id: "bear", label: "Bear (-6%)", color: "hover:border-retro-red" },
+                            { id: "base", label: "Base Case", color: "hover:border-retro-accent" },
+                            { id: "bull", label: "Bull (+5%)", color: "hover:border-retro-green" }
+                          ].map((profile) => (
+                            <button
+                              key={profile.id}
+                              type="button"
+                              onClick={() => setCalcRiskProfile(profile.id as any)}
+                              className={`flex-1 py-1.5 retro-border text-center text-[10px] font-bold uppercase transition-all ${
+                                calcRiskProfile === profile.id 
+                                  ? "bg-zinc-800 text-white border-zinc-500" 
+                                  : `bg-[#050507] text-zinc-500 border-zinc-850 ${profile.color}`
+                              }`}
+                            >
+                              {profile.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="border-t border-zinc-850 pt-3">
+                        <label className="flex items-center gap-2 cursor-pointer select-none text-[11px]">
+                          <input
+                            type="checkbox"
+                            checked={calcInflationAdjusted}
+                            onChange={(e) => setCalcInflationAdjusted(e.target.checked)}
+                            className="rounded border-zinc-700 bg-black text-retro-accent focus:ring-0"
+                          />
+                          <span className="text-zinc-300 uppercase font-bold">Adjust for Inflation</span>
+                        </label>
+                        {calcInflationAdjusted && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <span className="text-zinc-500 text-[10px] uppercase">Annual Inflation Rate:</span>
+                            <div className="relative w-20">
+                              <input
+                                type="number"
+                                value={calcInflationRate}
+                                onChange={(e) => setCalcInflationRate(Math.max(0, parseFloat(e.target.value) || 0))}
+                                className="w-full bg-[#050507] border border-zinc-700 px-2 py-1 text-center text-foreground focus:outline-none"
+                              />
+                              <span className="absolute right-2 top-1 text-zinc-500 text-[10px]">%</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Projections Display Panel */}
+                    <div className="lg:col-span-7 flex flex-col justify-between space-y-6">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="retro-border border-zinc-800 p-3 bg-[#050507]">
+                          <span className="text-[10px] text-zinc-500 font-mono uppercase block">Total Invested</span>
+                          <span className="text-lg font-bold font-mono text-zinc-100">₹{calcResults.totalInvested.toLocaleString()}</span>
+                        </div>
+                        <div className="retro-border border-zinc-800 p-3 bg-[#050507]">
+                          <span className="text-[10px] text-zinc-500 font-mono uppercase block">Future Value</span>
+                          <span className="text-lg font-bold font-mono text-retro-accent">₹{calcResults.finalValue.toLocaleString()}</span>
+                        </div>
+                        <div className="retro-border border-zinc-800 p-3 bg-[#050507]">
+                          <span className="text-[10px] text-zinc-500 font-mono uppercase block">Wealth Created</span>
+                          <span className="text-lg font-bold font-mono text-retro-green">₹{calcResults.wealthCreated.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {/* Timeline Table (Past 5 Years -> Future 10 Years) */}
+                      <div className="retro-border border-zinc-800 bg-[#050507] p-4 flex-grow overflow-y-auto max-h-[160px] font-mono text-[10px] space-y-1 scrollbar-thin">
+                        <div className="grid grid-cols-3 border-b border-zinc-800 pb-1.5 mb-1.5 text-zinc-500 font-bold uppercase">
+                          <span>Timeline Stage</span>
+                          <span className="text-right">Total Invested</span>
+                          <span className="text-right text-retro-accent">Projected Value</span>
+                        </div>
+                        {calcResults.historical.map((item, idx) => (
+                          <div key={`h-${idx}`} className="grid grid-cols-3 text-zinc-500 py-0.5">
+                            <span className="flex items-center gap-1">⏱ Year {item.year} (Historical)</span>
+                            <span className="text-right">₹{item.invested.toLocaleString()}</span>
+                            <span className="text-right">₹{item.value.toLocaleString()}</span>
+                          </div>
+                        ))}
+                        <div className="grid grid-cols-3 text-zinc-100 py-0.5 border-y border-zinc-800/40 my-1 bg-zinc-900/30">
+                          <span className="font-bold">🏁 Present Year 0</span>
+                          <span className="text-right">₹{calcPrincipal.toLocaleString()}</span>
+                          <span className="text-right font-bold">₹{calcPrincipal.toLocaleString()}</span>
+                        </div>
+                        {calcResults.future.map((item, idx) => (
+                          <div key={`f-${idx}`} className="grid grid-cols-3 text-zinc-300 py-0.5">
+                            <span className="text-retro-accent">🚀 Year +{item.year} (Projected)</span>
+                            <span className="text-right">₹{item.invested.toLocaleString()}</span>
+                            <span className="text-right text-retro-green font-bold">₹{item.value.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Extra Investment Allocations & Verdict Integration */}
+                      <div className="retro-border border-zinc-800 p-4 bg-[#0c0c0e]/80 space-y-3 font-mono text-[11px]">
+                        <span className="text-zinc-200 uppercase font-bold flex items-center gap-1.5">
+                          <Scale size={14} className="text-retro-accent" /> Premium Investment Recommendation
+                        </span>
+                        
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+                          <div>
+                            <span className="text-[10px] text-zinc-500 uppercase block mb-1">Set Your Risk Profile</span>
+                            <div className="flex gap-1.5">
+                              {["conservative", "moderate", "aggressive"].map((p) => (
+                                <button
+                                  key={p}
+                                  type="button"
+                                  onClick={() => setCalcPortfolioRisk(p as any)}
+                                  className={`px-2 py-0.5 border rounded text-[9px] uppercase font-bold transition-all ${
+                                    calcPortfolioRisk === p 
+                                      ? "bg-retro-accent text-black border-black" 
+                                      : "bg-transparent border-zinc-700 text-zinc-400 hover:text-white"
+                                  }`}
+                                >
+                                  {p}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="sm:text-right">
+                            <span className="text-[10px] text-zinc-500 uppercase block">Recommended Allocation</span>
+                            <span className="text-base font-bold text-retro-accent flex items-center justify-end gap-1">
+                              {getRecommendedAllocation()}% <span className="text-[10px] text-zinc-400">of portfolio</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-[10px] text-zinc-500 leading-normal border-t border-zinc-800 pt-2 flex items-start gap-1">
+                          <span className="text-retro-accent font-bold">NOTE:</span>
+                          <p>
+                            Based on InsideIIM Capital's official <span className={`font-bold ${result.verdict === "INVEST" ? "text-retro-green" : "text-retro-red"}`}>{result.verdict}</span> verdict for {company.toUpperCase()}, this recommendation is optimized for a {calcPortfolioRisk} strategy. Allocations are simulated limits to manage downside risk.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
