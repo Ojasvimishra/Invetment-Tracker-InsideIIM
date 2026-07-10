@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-retro-accent: var(--retro-accent);
+  --color-retro-secondary: var(--retro-secondary);
+  --color-retro-green: var(--retro-green);
+  --color-retro-red: var(--retro-red);
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-space);
+}
+
+:root {
+  --background: #09090b; /* Deep charcoal/black */
+  --foreground: #fafafa;
+  --retro-accent: #facc15; /* Retro yellow */
+  --retro-secondary: #0ea5e9; /* Cyber blue */
+  --retro-green: #22c55e; /* Retro green */
+  --retro-red: #ef4444; /* Retro red */
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+/* Retro Utilities */
+.retro-border {
+  border: 2px solid var(--foreground);
+  box-shadow: 4px 4px 0px var(--retro-accent);
+  transition: all 0.2s ease-in-out;
+}
+
+.retro-border:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--retro-accent);
+}
+
+.retro-border-secondary {
+  border: 2px solid var(--foreground);
+  box-shadow: 4px 4px 0px var(--retro-secondary);
+  transition: all 0.2s ease-in-out;
+}
+
+.retro-border-secondary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--retro-secondary);
+}
+
+.retro-border-green {
+  border: 2px solid var(--foreground);
+  box-shadow: 4px 4px 0px var(--retro-green);
+}
+
+.retro-border-red {
+  border: 2px solid var(--foreground);
+  box-shadow: 4px 4px 0px var(--retro-red);
+}
+
+/* Blinking Cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.blinking-cursor::after {
+  content: '|';
+  margin-left: 2px;
+  animation: blink 1s step-start infinite;
+  color: var(--retro-accent);
+}
+
+/* Animations */
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
