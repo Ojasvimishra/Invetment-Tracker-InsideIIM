@@ -36,7 +36,7 @@ export default function Home() {
   const [currentLogIndex, setCurrentLogIndex] = useState(0);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
+
   const logsEndRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -140,8 +140,8 @@ export default function Home() {
   };
 
   // Initialize Vercel AI SDK chat hook with custom payload context
-  const { 
-    messages: chatMessages, 
+  const {
+    messages: chatMessages,
     sendMessage,
     status: chatStatus,
     setMessages: setChatMessages
@@ -328,9 +328,8 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                       >
                         <span className="font-heading text-sm font-bold tracking-tight">{item.company}</span>
                         <div className="flex justify-between items-center w-full mt-2">
-                          <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${
-                            item.data.verdict === "INVEST" ? "bg-retro-green/20 text-retro-green" : "bg-retro-red/20 text-retro-red"
-                          }`}>
+                          <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${item.data.verdict === "INVEST" ? "bg-retro-green/20 text-retro-green" : "bg-retro-red/20 text-retro-red"
+                            }`}>
                             {item.data.verdict}
                           </span>
                           <span className="text-[9px] text-zinc-500 font-mono">{item.date.split(",")[0]}</span>
@@ -404,7 +403,7 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                       Analyze
                     </button>
                   </div>
-                  
+
                   {/* Quick Start Seeds */}
                   <div className="mt-6 border-t border-zinc-800 pt-4">
                     <div className="text-zinc-500 font-mono text-xs mb-3 uppercase tracking-wider">Suggested Research Targets:</div>
@@ -441,7 +440,7 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                     </div>
                     <Cpu className="text-retro-secondary opacity-60" size={20} />
                   </div>
-                  
+
                   <div className="retro-border border-zinc-800 p-4 bg-[#050507] flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-zinc-500 font-mono uppercase block">Model Core</span>
@@ -529,9 +528,8 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
               <div className="space-y-8 animate-slide-up">
                 {/* Verdict Header */}
                 <div
-                  className={`retro-border p-8 bg-[#0f0f11] flex flex-col md:flex-row items-center justify-between gap-6 ${
-                    result.verdict === "INVEST" ? "border-retro-green shadow-retro-green" : "border-retro-red shadow-retro-red"
-                  }`}
+                  className={`retro-border p-8 bg-[#0f0f11] flex flex-col md:flex-row items-center justify-between gap-6 ${result.verdict === "INVEST" ? "border-retro-green shadow-retro-green" : "border-retro-red shadow-retro-red"
+                    }`}
                 >
                   <div>
                     <div className="text-zinc-500 font-mono text-xs uppercase mb-1">Agent Final Decision</div>
@@ -540,11 +538,10 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                     </h2>
                   </div>
                   <div
-                    className={`text-5xl font-heading font-black px-10 py-5 retro-border ${
-                      result.verdict === "INVEST"
+                    className={`text-5xl font-heading font-black px-10 py-5 retro-border ${result.verdict === "INVEST"
                         ? "bg-retro-green text-black border-black shadow-[4px_4px_0px_#000]"
                         : "bg-retro-red text-white border-black shadow-[4px_4px_0px_#000]"
-                    }`}
+                      }`}
                   >
                     {result.verdict}
                   </div>
@@ -567,7 +564,7 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                               <line x1="30" y1="30" x2="470" y2="30" stroke="#222" strokeDasharray="4" />
                               <line x1="30" y1="90" x2="470" y2="90" stroke="#222" strokeDasharray="4" />
                               <line x1="30" y1="150" x2="470" y2="150" stroke="#222" strokeDasharray="4" />
-                              
+
                               {/* Trend path */}
                               <path
                                 d={chart.pathData}
@@ -688,7 +685,7 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                 {/* Interactive Analyst Follow-Up Chatbot */}
                 <div className="retro-border p-6 bg-[#0f0f11]">
                   <h3 className="font-heading text-xl font-bold mb-4 uppercase border-b border-zinc-800 pb-2 flex items-center gap-2">
-                    <Bot size={20} className="text-retro-accent" /> Chat with the Lead Analyst
+                    <Bot size={20} className="text-retro-accent" /> Chat with Expert Analyst
                   </h3>
                   <div className="flex flex-col h-[300px] border border-zinc-800 bg-[#050507] rounded overflow-hidden">
                     {/* Chat Messages */}
@@ -702,11 +699,10 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                       {chatMessages.map((msg) => (
                         <div
                           key={msg.id}
-                          className={`flex gap-3 p-3 rounded text-sm ${
-                            msg.role === "user"
+                          className={`flex gap-3 p-3 rounded text-sm ${msg.role === "user"
                               ? "bg-[#16161a] border border-zinc-800 ml-12 self-end"
                               : "bg-[#1e1e24] border border-zinc-800 mr-12"
-                          }`}
+                            }`}
                         >
                           <div className="flex-shrink-0 mt-0.5">
                             {msg.role === "user" ? (
@@ -718,9 +714,9 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                           <div className="flex-grow whitespace-pre-wrap">
                             {msg.parts
                               ? msg.parts
-                                  .filter((part: any) => part.type === "text")
-                                  .map((part: any) => part.text)
-                                  .join("")
+                                .filter((part: any) => part.type === "text")
+                                .map((part: any) => part.text)
+                                .join("")
                               : (msg as any).content}
                           </div>
                         </div>
@@ -733,9 +729,9 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                       )}
                       <div ref={chatEndRef} />
                     </div>
- 
+
                     {/* Chat Input */}
-                    <form 
+                    <form
                       onSubmit={async (e) => {
                         e.preventDefault();
                         if (!chatInput.trim()) return;
@@ -749,7 +745,7 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                             companyData: result,
                           },
                         });
-                      }} 
+                      }}
                       className="border-t border-[#333] p-3 flex gap-3 bg-[#0f0f11]"
                     >
                       <input
@@ -775,7 +771,7 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                   <h3 className="font-heading text-xl font-bold mb-4 uppercase border-b border-zinc-800 pb-2 flex items-center gap-2">
                     <Calculator size={20} className="text-retro-accent" /> Portfolio & Projections Calculator
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                     {/* Calculator Controls */}
                     <div className="lg:col-span-5 space-y-5 font-mono text-xs">
@@ -785,18 +781,16 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                           <button
                             type="button"
                             onClick={() => setCalcMode("sip")}
-                            className={`flex-1 py-2 retro-border text-center font-bold transition-all uppercase text-[11px] ${
-                              calcMode === "sip" ? "bg-retro-accent text-black border-black" : "bg-[#050507] text-zinc-400 border-zinc-700 hover:text-white"
-                            }`}
+                            className={`flex-1 py-2 retro-border text-center font-bold transition-all uppercase text-[11px] ${calcMode === "sip" ? "bg-retro-accent text-black border-black" : "bg-[#050507] text-zinc-400 border-zinc-700 hover:text-white"
+                              }`}
                           >
                             SIP (Monthly)
                           </button>
                           <button
                             type="button"
                             onClick={() => setCalcMode("lumpSum")}
-                            className={`flex-1 py-2 retro-border text-center font-bold transition-all uppercase text-[11px] ${
-                              calcMode === "lumpSum" ? "bg-retro-accent text-black border-black" : "bg-[#050507] text-zinc-400 border-zinc-700 hover:text-white"
-                            }`}
+                            className={`flex-1 py-2 retro-border text-center font-bold transition-all uppercase text-[11px] ${calcMode === "lumpSum" ? "bg-retro-accent text-black border-black" : "bg-[#050507] text-zinc-400 border-zinc-700 hover:text-white"
+                              }`}
                           >
                             Lump Sum
                           </button>
@@ -875,11 +869,10 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                               key={profile.id}
                               type="button"
                               onClick={() => setCalcRiskProfile(profile.id as any)}
-                              className={`flex-1 py-1.5 retro-border text-center text-[10px] font-bold uppercase transition-all ${
-                                calcRiskProfile === profile.id 
-                                  ? "bg-zinc-800 text-white border-zinc-500" 
+                              className={`flex-1 py-1.5 retro-border text-center text-[10px] font-bold uppercase transition-all ${calcRiskProfile === profile.id
+                                  ? "bg-zinc-800 text-white border-zinc-500"
                                   : `bg-[#050507] text-zinc-500 border-zinc-850 ${profile.color}`
-                              }`}
+                                }`}
                             >
                               {profile.label}
                             </button>
@@ -964,7 +957,7 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                         <span className="text-zinc-200 uppercase font-bold flex items-center gap-1.5">
                           <Scale size={14} className="text-retro-accent" /> Premium Investment Recommendation
                         </span>
-                        
+
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
                           <div>
                             <span className="text-[10px] text-zinc-500 uppercase block mb-1">Set Your Risk Profile</span>
@@ -974,11 +967,10 @@ ${result.logs.map(log => `- ${log}`).join("\n")}
                                   key={p}
                                   type="button"
                                   onClick={() => setCalcPortfolioRisk(p as any)}
-                                  className={`px-2 py-0.5 border rounded text-[9px] uppercase font-bold transition-all ${
-                                    calcPortfolioRisk === p 
-                                      ? "bg-retro-accent text-black border-black" 
+                                  className={`px-2 py-0.5 border rounded text-[9px] uppercase font-bold transition-all ${calcPortfolioRisk === p
+                                      ? "bg-retro-accent text-black border-black"
                                       : "bg-transparent border-zinc-700 text-zinc-400 hover:text-white"
-                                  }`}
+                                    }`}
                                 >
                                   {p}
                                 </button>
